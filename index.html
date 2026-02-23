@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastShare</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Space Grotesk', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    
+    @keyframes gradient-shift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes pulse-ring {
+      0% { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+    
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes copy-flash {
+      0%, 100% { background-color: rgba(16, 185, 129, 0); }
+      50% { background-color: rgba(16, 185, 129, 0.2); }
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(-45deg, #0f0f23, #1a1a3e, #0d1b2a, #1b263b);
+      background-size: 400% 400%;
+      animation: gradient-shift 15s ease infinite;
+    }
+    
+    .float-animation { animation: float 3s ease-in-out infinite; }
+    .slide-up { animation: slide-up 0.4s ease-out forwards; }
+    .copy-flash { animation: copy-flash 0.5s ease-out; }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .neon-border {
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.3),
+                  inset 0 0 20px rgba(99, 102, 241, 0.05);
+    }
+    
+    .item-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .item-card:hover {
+      transform: translateX(8px);
+      background: rgba(99, 102, 241, 0.1);
+    }
+    
+    .btn-glow:hover {
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+    }
+    
+    .scrollbar-custom::-webkit-scrollbar { width: 6px; }
+    .scrollbar-custom::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
+    .scrollbar-custom::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.5); border-radius: 10px; }
+    
+    .device-badge {
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    
+    .pulse-dot {
+      position: relative;
+    }
+    
+    .pulse-dot::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: inherit;
+      animation: pulse-ring 1.5s ease-out infinite;
+    }
+
+    .toast {
+      animation: slide-up 0.3s ease-out;
+    }
+
+    .image-thumb {
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s;
+      border-radius: 12px;
+      overflow: hidden;
+      height: 120px;
+    }
+
+    .image-thumb:hover {
+      transform: scale(1.05);
+    }
+
+    .image-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .remove-image {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: rgba(239, 68, 68, 0.9);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+      cursor: pointer;
+    }
+
+    .image-thumb:hover .remove-image {
+      opacity: 1;
+    }
+
+    .drop-zone.dragover {
+      background-color: rgba(99, 102, 241, 0.2);
+      border-color: #6366f1;
+    }
+
+    .media-item {
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .media-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: all 0.3s;
+    }
+
+    .media-item:hover img {
+      transform: scale(1.05);
+    }
+
+    .download-btn {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(99, 102, 241, 0.9);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.3s;
+    }
+
+    .media-item:hover .download-btn {
+      opacity: 1;
+    }
+
+    #qr-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #qr-container canvas {
+      border-radius: 8px;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full gradient-bg text-white overflow-auto">
+  <div id="app" class="min-h-full w-full p-4 md:p-8"><!-- Header -->
+   <header class="max-w-4xl mx-auto mb-8 slide-up">
+    <div class="flex items-center justify-between flex-wrap gap-4">
+     <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center float-animation">
+       <svg class="w-7 h-7" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+       </svg>
+      </div>
+      <div>
+       <h1 id="app-title" class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">FastShare</h1>
+       <p class="text-gray-400 text-sm">Transfer Foto &amp; Teks Instan</p>
+      </div>
+     </div>
+     <div class="flex items-center gap-2">
+      <div class="pulse-dot w-2 h-2 rounded-full bg-emerald-400"></div><span id="device-indicator" class="text-sm text-gray-400">Mendeteksi...</span>
+     </div>
+    </div><!-- Session Info -->
+    <div class="mt-6 glass-card rounded-2xl p-4 flex items-center justify-between">
+     <div>
+      <p class="text-xs text-gray-500 mb-1">Session ID</p>
+      <p id="session-id" class="mono text-sm font-semibold text-indigo-400">Generating...</p>
+     </div><button id="toggle-qr-btn" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg><span>Tampilkan QR</span> </button>
+    </div><!-- QR Code Modal -->
+    <div id="qr-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+     <div class="glass-card rounded-3xl p-8 max-w-md w-full">
+      <div class="flex items-center justify-between mb-6">
+       <h2 class="text-xl font-bold">Scan untuk Terhubung</h2><button id="close-qr-btn" class="text-gray-400 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg></button>
+      </div>
+      <div id="qr-container" class="bg-white p-4 rounded-xl mx-auto mb-4"></div>
+      <p class="text-center text-gray-400 text-sm mb-3">atau copy Session ID:</p>
+      <div class="flex gap-2"><input id="session-input" type="text" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm mono" readonly> <button id="copy-session-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-all">Copy</button>
+      </div>
+     </div>
+    </div>
+   </header><!-- Main Content -->
+   <main class="max-w-4xl mx-auto space-y-6"><!-- Input Section -->
+    <section class="glass-card rounded-3xl p-6 neon-border slide-up" style="animation-delay: 0.1s">
+     <div class="flex items-center gap-2 mb-4">
+      <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      </svg>
+      <h2 class="text-lg font-semibold">Kirim Teks atau Foto</h2>
+     </div>
+     <div class="space-y-6"><!-- Text Section -->
+      <div id="text-section"><textarea id="text-input" placeholder="Ketik atau tempel teks di sini..." class="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none mono text-sm"></textarea>
+       <div class="flex flex-wrap gap-3 mt-4"><button id="send-btn" class="flex-1 min-w-[140px] bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3 px-6 rounded-xl transition-all btn-glow flex items-center justify-center gap-2">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+         </svg><span>Kirim Teks</span> </button> <button id="paste-btn" class="bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all flex items-center gap-2">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+         </svg><span>Tempel</span> </button>
+       </div>
+      </div><!-- Divider -->
+      <div class="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div><!-- Image Section -->
+      <div id="image-section">
+       <div class="mb-4"><label class="flex items-center gap-2 text-sm font-medium text-gray-300 mb-3">
+         <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+         </svg><span>Upload Foto</span> </label>
+        <div id="drop-zone" class="drop-zone border-2 border-dashed border-pink-500/50 rounded-2xl p-8 text-center cursor-pointer hover:border-pink-500 hover:bg-pink-500/5 transition-all">
+         <svg class="w-12 h-12 mx-auto mb-3 text-pink-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+         </svg>
+         <p class="text-gray-300 font-medium">Seret foto di sini atau klik</p>
+         <p class="text-gray-500 text-sm mt-1">JPG, PNG, WebP (Max 5MB per file)</p><input id="image-input" type="file" accept="image/*" multiple class="hidden">
+        </div>
+       </div><!-- Image Preview -->
+       <div id="image-preview" class="hidden">
+        <p class="text-sm text-gray-400 mb-3">Foto yang dipilih:</p>
+        <div id="preview-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4"></div>
+       </div><button id="upload-btn" class="w-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-semibold py-3 px-6 rounded-xl transition-all btn-glow flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+        </svg><span>Kirim Foto</span> </button>
+      </div>
+     </div>
+    </section><!-- Media History -->
+    <section class="glass-card rounded-3xl p-6 slide-up" style="animation-delay: 0.2s">
+     <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+       <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+       </svg>
+       <h2 class="text-lg font-semibold">Riwayat Transfer</h2>
+      </div><span id="item-count" class="text-sm text-gray-400">0 item</span>
+     </div>
+     <div id="media-list" class="space-y-3 max-h-[500px] overflow-y-auto scrollbar-custom pr-2"><!-- Empty State -->
+      <div id="empty-state" class="text-center py-12">
+       <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+        <svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+       </div>
+       <p class="text-gray-500">Belum ada transfer</p>
+       <p class="text-gray-600 text-sm mt-1">Mulai dengan mengirim teks atau foto!</p>
+      </div>
+     </div>
+    </section><!-- Tips Section -->
+    <section class="glass-card rounded-3xl p-6 slide-up" style="animation-delay: 0.3s">
+     <div class="flex items-start gap-3">
+      <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+       <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+       </svg>
+      </div>
+      <div>
+       <h3 class="font-semibold text-amber-400 mb-1">Cara Pakai dengan QR Code</h3>
+       <p class="text-gray-400 text-sm leading-relaxed mb-2">📱 <strong>HP:</strong> Buka halaman ini, klik "Tampilkan QR" → scan QR code dari PC menggunakan kamera HP</p>
+       <p class="text-gray-400 text-sm leading-relaxed mb-2">💻 <strong>PC:</strong> Buka halaman ini, klik "Tampilkan QR" → tampilkan QR code untuk di-scan HP</p>
+       <p class="text-gray-400 text-sm leading-relaxed">✨ Setelah terhubung dengan Session ID yang sama, teks dan foto akan langsung sinkron antar perangkat!</p>
+      </div>
+     </div>
+    </section>
+   </main><!-- Toast Container -->
+   <div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 space-y-2"></div>
+  </div>
+  <script>
+    // Default configuration
+    const defaultConfig = {
+      app_title: 'FastShare',
+      placeholder_text: 'Ketik atau tempel teks di sini...'
+    };
+    
+    let currentData = [];
+    let currentDevice = 'Unknown';
+    let selectedImages = [];
+    let sessionId = '';
+    let qrGenerated = false;
+    
+    // Detect device type
+    function detectDevice() {
+      const ua = navigator.userAgent;
+      if (/Android/i.test(ua)) return '📱 Android';
+      if (/iPhone|iPad|iPod/i.test(ua)) return '📱 iOS';
+      if (/Windows/i.test(ua)) return '💻 Windows';
+      if (/Mac/i.test(ua)) return '💻 macOS';
+      if (/Linux/i.test(ua)) return '💻 Linux';
+      return '🖥️ Desktop';
+    }
+    
+    // Generate unique session ID
+    function generateSessionId() {
+      return Math.random().toString(36).substr(2, 9).toUpperCase();
+    }
+    
+    // Generate QR code
+    function generateQRCode(text) {
+      const container = document.getElementById('qr-container');
+      container.innerHTML = '';
+      
+      if (qrGenerated) return;
+      
+      new QRCode(container, {
+        text: text,
+        width: 250,
+        height: 250,
+        colorDark: '#0f0f23',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      
+      qrGenerated = true;
+    }
+    
+    // Show toast notification
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      const colors = {
+        success: 'bg-emerald-500',
+        error: 'bg-red-500',
+        info: 'bg-indigo-500'
+      };
+      
+      toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2`;
+      toast.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          ${type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>' : 
+            type === 'error' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>' :
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'}
+        </svg>
+        <span>${message}</span>
+      `;
+      
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+    
+    // Generate unique ID
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+    
+    // Format file size
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+    
+    // Format time ago
+    function timeAgo(dateString) {
+      const now = new Date();
+      const date = new Date(dateString);
+      const seconds = Math.floor((now - date) / 1000);
+      
+      if (seconds < 60) return 'Baru saja';
+      if (seconds < 3600) return `${Math.floor(seconds / 60)} menit lalu`;
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)} jam lalu`;
+      return `${Math.floor(seconds / 86400)} hari lalu`;
+    }
+    
+    // Render media items
+    function renderItems(data) {
+      const list = document.getElementById('media-list');
+      const emptyState = document.getElementById('empty-state');
+      const itemCount = document.getElementById('item-count');
+      
+      // Filter by current session ID
+      const filteredData = data.filter(item => item.session_id === sessionId);
+      
+      itemCount.textContent = `${filteredData.length} item`;
+      
+      if (filteredData.length === 0) {
+        emptyState.style.display = 'block';
+        Array.from(list.children).forEach(child => {
+          if (child.id !== 'empty-state') child.remove();
+        });
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      
+      const existingItems = new Map();
+      Array.from(list.children).forEach(el => {
+        if (el.dataset.itemId) {
+          existingItems.set(el.dataset.itemId, el);
+        }
+      });
+      
+      const sortedData = [...filteredData].sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      
+      sortedData.forEach((item, index) => {
+        const existingEl = existingItems.get(item.__backendId);
+        
+        if (existingEl) {
+          updateItemElement(existingEl, item);
+          existingItems.delete(item.__backendId);
+        } else {
+          const newEl = createItemElement(item);
+          newEl.style.animationDelay = `${index * 0.05}s`;
+          list.appendChild(newEl);
+        }
+      });
+      
+      existingItems.forEach(el => el.remove());
+      
+      sortedData.forEach(item => {
+        const el = list.querySelector(`[data-item-id="${item.__backendId}"]`);
+        if (el) list.appendChild(el);
+      });
+    }
+    
+    // Create item element
+    function createItemElement(item) {
+      const div = document.createElement('div');
+      div.dataset.itemId = item.__backendId;
+      div.className = 'slide-up';
+      
+      updateItemElement(div, item);
+      return div;
+    }
+    
+    // Update item element
+    function updateItemElement(el, item) {
+      const deviceColors = {
+        '📱 Android': 'bg-emerald-500/20 text-emerald-400',
+        '📱 iOS': 'bg-blue-500/20 text-blue-400',
+        '💻 Windows': 'bg-indigo-500/20 text-indigo-400',
+        '💻 macOS': 'bg-purple-500/20 text-purple-400',
+        '💻 Linux': 'bg-orange-500/20 text-orange-400',
+        '🖥️ Desktop': 'bg-gray-500/20 text-gray-400'
+      };
+      
+      const colorClass = deviceColors[item.device] || deviceColors['🖥️ Desktop'];
+      
+      if (item.type === 'image') {
+        el.innerHTML = `
+          <div class="item-card glass-card rounded-2xl overflow-hidden">
+            <div class="media-item h-48">
+              <img src="${escapeHtml(item.content)}" alt="Shared image">
+              <button class="download-btn" title="Download">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+              </button>
+            </div>
+            <div class="p-4">
+              <div class="flex items-start justify-between gap-3 mb-2">
+                <span class="device-badge ${colorClass}">${item.device}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-gray-500">${timeAgo(item.createdAt)}</span>
+                  <button class="delete-btn text-red-400 hover:text-red-300 transition-all p-1" data-id="${item.__backendId}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <p class="text-gray-400 text-sm">Foto • ${item.file_size || 'Unknown'}</p>
+            </div>
+          </div>
+        `;
+        
+        const downloadBtn = el.querySelector('.download-btn');
+        downloadBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          downloadImage(item.content, item.file_name || 'fastshare-image');
+        });
+      } else {
+        el.innerHTML = `
+          <div class="item-card bg-white/5 rounded-2xl p-4 cursor-pointer group">
+            <div class="flex items-start justify-between gap-3 mb-2">
+              <span class="device-badge ${colorClass}">${item.device}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-500">${timeAgo(item.createdAt)}</span>
+                <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-all p-1" data-id="${item.__backendId}">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <p class="text-gray-300 text-sm mono line-clamp-3 break-all">${escapeHtml(item.content)}</p>
+            <div class="flex items-center gap-1 mt-2 text-xs text-gray-500">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2"/>
+              </svg>
+              <span>Klik untuk menyalin</span>
+            </div>
+          </div>
+        `;
+        
+        el.addEventListener('click', async (e) => {
+          if (!e.target.closest('.delete-btn')) {
+            try {
+              await navigator.clipboard.writeText(item.content);
+              showToast('Berhasil disalin!', 'success');
+            } catch (err) {
+              showToast('Gagal menyalin', 'error');
+            }
+          }
+        });
+      }
+      
+      const deleteBtn = el.querySelector('.delete-btn');
+      deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const itemToDelete = currentData.find(d => d.__backendId === item.__backendId);
+        if (itemToDelete) {
+          deleteBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="32"/></svg>';
+          const result = await window.dataSdk.delete(itemToDelete);
+          if (result.isOk) {
+            showToast('Item dihapus', 'info');
+          } else {
+            showToast('Gagal menghapus', 'error');
+          }
+        }
+      });
+    }
+    
+    // Download image
+    function downloadImage(dataUrl, filename) {
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = filename + '.jpg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Download dimulai', 'success');
+    }
+    
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // Convert file to base64
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    // Update image preview
+    async function updateImagePreview() {
+      const preview = document.getElementById('image-preview');
+      const container = document.getElementById('preview-container');
+      const uploadBtn = document.getElementById('upload-btn');
+      
+      if (selectedImages.length === 0) {
+        preview.classList.add('hidden');
+        uploadBtn.disabled = true;
+        return;
+      }
+      
+      preview.classList.remove('hidden');
+      uploadBtn.disabled = false;
+      
+      container.innerHTML = '';
+      
+      for (let i = 0; i < selectedImages.length; i++) {
+        const file = selectedImages[i];
+        const dataUrl = await fileToBase64(file);
+        
+        const thumb = document.createElement('div');
+        thumb.className = 'image-thumb';
+        thumb.innerHTML = `
+          <img src="${dataUrl}" alt="Preview">
+          <button class="remove-image" data-index="${i}">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        `;
+        
+        container.appendChild(thumb);
+      }
+      
+      // Add remove handlers
+      container.querySelectorAll('.remove-image').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const index = parseInt(btn.dataset.index);
+          selectedImages.splice(index, 1);
+          updateImagePreview();
+        });
+      });
+    }
+    
+    // Data handler for SDK
+    const dataHandler = {
+      onDataChanged(data) {
+        currentData = data;
+        renderItems(data);
+      }
+    };
+    
+    // Initialize app
+    async function initApp() {
+      // Generate session ID
+      sessionId = generateSessionId();
+      document.getElementById('session-id').textContent = sessionId;
+      document.getElementById('session-input').value = sessionId;
+      
+      currentDevice = detectDevice();
+      document.getElementById('device-indicator').textContent = currentDevice;
+      
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (config) => {
+            document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
+            document.getElementById('text-input').placeholder = config.placeholder_text || defaultConfig.placeholder_text;
+          },
+          mapToCapabilities: (config) => ({
+            recolorables: [],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ['app_title', config.app_title || defaultConfig.app_title],
+            ['placeholder_text', config.placeholder_text || defaultConfig.placeholder_text]
+          ])
+        });
+      }
+      
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          console.error('Failed to initialize Data SDK');
+        }
+      }
+      
+      // QR Code handlers
+      const toggleQrBtn = document.getElementById('toggle-qr-btn');
+      const qrModal = document.getElementById('qr-modal');
+      const closeQrBtn = document.getElementById('close-qr-btn');
+      const copySessionBtn = document.getElementById('copy-session-btn');
+      
+      toggleQrBtn.addEventListener('click', () => {
+        qrModal.classList.remove('hidden');
+        generateQRCode(window.location.href + '#' + sessionId);
+      });
+      
+      closeQrBtn.addEventListener('click', () => {
+        qrModal.classList.add('hidden');
+      });
+      
+      qrModal.addEventListener('click', (e) => {
+        if (e.target === qrModal) {
+          qrModal.classList.add('hidden');
+        }
+      });
+      
+      copySessionBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(sessionId);
+          showToast('Session ID disalin!', 'success');
+        } catch (err) {
+          showToast('Gagal menyalin', 'error');
+        }
+      });
+      
+      // Image upload handlers
+      const dropZone = document.getElementById('drop-zone');
+      const imageInput = document.getElementById('image-input');
+      
+      dropZone.addEventListener('click', () => imageInput.click());
+      
+      imageInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        selectedImages.push(...files);
+        await updateImagePreview();
+      });
+      
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+      
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+      });
+      
+      dropZone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const files = Array.from(e.dataTransfer.files);
+        selectedImages.push(...files);
+        await updateImagePreview();
+      });
+      
+      // Send text
+      document.getElementById('send-btn').addEventListener('click', async () => {
+        const input = document.getElementById('text-input');
+        const content = input.value.trim();
+        
+        if (!content) {
+          showToast('Ketik teks terlebih dahulu!', 'error');
+          return;
+        }
+        
+        if (currentData.length >= 999) {
+          showToast('Batas maksimum tercapai!', 'error');
+          return;
+        }
+        
+        const sendBtn = document.getElementById('send-btn');
+        sendBtn.disabled = true;
+        
+        const newItem = {
+          id: generateId(),
+          content: content,
+          type: 'text',
+          device: currentDevice,
+          session_id: sessionId,
+          createdAt: new Date().toISOString()
+        };
+        
+        if (window.dataSdk) {
+          const result = await window.dataSdk.create(newItem);
+          if (result.isOk) {
+            input.value = '';
+            showToast('Teks berhasil dikirim!', 'success');
+          } else {
+            showToast('Gagal mengirim teks', 'error');
+          }
+        }
+        
+        sendBtn.disabled = false;
+      });
+      
+      // Paste text
+      document.getElementById('paste-btn').addEventListener('click', async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          document.getElementById('text-input').value = text;
+          showToast('Teks ditempel!', 'success');
+        } catch (err) {
+          showToast('Tidak bisa mengakses clipboard', 'error');
+        }
+      });
+      
+      // Upload images
+      document.getElementById('upload-btn').addEventListener('click', async () => {
+        if (selectedImages.length === 0) {
+          showToast('Pilih foto terlebih dahulu!', 'error');
+          return;
+        }
+        
+        const uploadBtn = document.getElementById('upload-btn');
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="32"/></svg><span>Mengunggah...</span>';
+        
+        for (const file of selectedImages) {
+          if (file.size > 5 * 1024 * 1024) {
+            showToast(`Foto ${file.name} terlalu besar (Max 5MB)`, 'error');
+            continue;
+          }
+          
+          try {
+            const dataUrl = await fileToBase64(file);
+            
+            const newItem = {
+              id: generateId(),
+              content: dataUrl,
+              type: 'image',
+              device: currentDevice,
+              session_id: sessionId,
+              file_size: formatFileSize(file.size),
+              file_name: file.name,
+              createdAt: new Date().toISOString()
+            };
+            
+            if (window.dataSdk) {
+              const result = await window.dataSdk.create(newItem);
+              if (!result.isOk) {
+                showToast('Gagal mengunggah foto', 'error');
+              }
+            }
+          } catch (err) {
+            showToast('Error memproses foto', 'error');
+          }
+        }
+        
+        selectedImages = [];
+        await updateImagePreview();
+        document.getElementById('image-input').value = '';
+        showToast('Semua foto berhasil dikirim!', 'success');
+        
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg><span>Kirim Foto</span>';
+      });
+      
+      // Enter key for text
+      document.getElementById('text-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          document.getElementById('send-btn').click();
+        }
+      });
+    }
+    
+    initApp();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d2a9fba2481fd26',t:'MTc3MTg5MDYxMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
