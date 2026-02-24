@@ -22,6 +22,11 @@
       50% { transform: translateY(-10px); }
     }
     
+    @keyframes pulse-ring {
+      0% { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+    
     @keyframes slide-up {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -81,7 +86,7 @@
       height: 100%;
       border-radius: 50%;
       background: inherit;
-      animation: pulse 1.5s ease-out infinite;
+      animation: pulse-ring 1.5s ease-out infinite;
     }
 
     .toast {
@@ -168,32 +173,13 @@
     .media-item:hover .download-btn {
       opacity: 1;
     }
-
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-      padding: 1rem;
-    }
-
-    .device-list {
-      max-height: 300px;
-      overflow-y: auto;
-    }
   </style>
   <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
  </head>
- <body class="h-full gradient-bg text-white overflow-hidden">
-  <div id="app" class="h-full w-full flex flex-col p-4 md:p-8"><!-- Header -->
-   <header class="mb-6 slide-up flex-shrink-0">
+ <body class="h-full gradient-bg text-white overflow-auto">
+  <div id="app" class="min-h-full w-full p-4 md:p-8"><!-- Header -->
+   <header class="max-w-4xl mx-auto mb-8 slide-up">
     <div class="flex items-center justify-between flex-wrap gap-4">
      <div class="flex items-center gap-3">
       <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center float-animation">
@@ -207,9 +193,11 @@
      </div>
      <div class="flex items-center gap-3 flex-wrap">
       <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5">
-       <div class="pulse-dot w-2 h-2 rounded-full bg-emerald-400"></div><span id="device-indicator" class="text-sm text-gray-300 font-medium">Mendeteksi...</span>
+       <div class="pulse-dot w-2 h-2 rounded-full bg-emerald-400"></div><span id="device-indicator" class="text-sm text-gray-300 font-medium">Mendeteksi device...</span>
       </div>
-      <div class="flex items-center gap-2 border-l border-white/10 pl-3 flex-wrap"><button id="session-btn" class="bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-3 rounded-lg transition-all text-sm flex items-center gap-2">
+      <div class="flex items-center gap-2 border-l border-white/10 pl-3"><button id="qrcode-btn" class="bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-3 rounded-lg transition-all text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg><span>QR</span> </button> <button id="session-btn" class="bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-3 rounded-lg transition-all text-sm flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.658 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
         </svg><span>ID</span> </button> <button id="join-btn" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium py-2 px-3 rounded-lg transition-all text-sm btn-glow flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -218,18 +206,18 @@
      </div>
     </div>
    </header><!-- Main Content -->
-   <main class="flex-1 flex flex-col overflow-y-auto scrollbar-custom space-y-6"><!-- Input Section -->
-    <section class="glass-card rounded-3xl p-6 neon-border slide-up flex-shrink-0" style="animation-delay: 0.1s">
+   <main class="max-w-4xl mx-auto space-y-6"><!-- Input Section -->
+    <section class="glass-card rounded-3xl p-6 neon-border slide-up" style="animation-delay: 0.1s">
      <div class="flex items-center gap-2 mb-4">
       <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
       </svg>
       <h2 class="text-lg font-semibold">Kirim Teks atau Foto</h2>
      </div>
      <div class="space-y-6"><!-- Text Section -->
-      <div><textarea id="text-input" placeholder="Ketik atau tempel teks di sini..." class="w-full h-24 md:h-32 bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none mono text-sm"></textarea>
-       <div class="flex flex-wrap gap-3 mt-4"><button id="send-btn" class="flex-1 min-w-[120px] bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3 px-4 md:px-6 rounded-xl transition-all btn-glow flex items-center justify-center gap-2 text-sm md:text-base">
+      <div><textarea id="text-input" placeholder="Ketik atau tempel teks di sini..." class="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none mono text-sm"></textarea>
+       <div class="flex flex-wrap gap-3 mt-4"><button id="send-btn" class="flex-1 min-w-[140px] bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3 px-6 rounded-xl transition-all btn-glow flex items-center justify-center gap-2">
          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-         </svg><span>Kirim Teks</span> </button> <button id="paste-btn" class="bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-4 rounded-xl transition-all flex items-center gap-2 text-sm">
+         </svg><span>Kirim Teks</span> </button> <button id="paste-btn" class="bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all flex items-center gap-2">
          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
          </svg><span>Tempel</span> </button>
        </div>
@@ -238,42 +226,42 @@
       <div><label class="flex items-center gap-2 text-sm font-medium text-gray-300 mb-3">
         <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg><span>Upload Foto</span> </label>
-       <div id="drop-zone" class="drop-zone border-2 border-dashed border-pink-500/50 rounded-2xl p-6 md:p-8 text-center cursor-pointer hover:border-pink-500 hover:bg-pink-500/5 transition-all">
-        <svg class="w-10 md:w-12 h-10 md:h-12 mx-auto mb-2 md:mb-3 text-pink-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+       <div id="drop-zone" class="drop-zone border-2 border-dashed border-pink-500/50 rounded-2xl p-8 text-center cursor-pointer hover:border-pink-500 hover:bg-pink-500/5 transition-all">
+        <svg class="w-12 h-12 mx-auto mb-3 text-pink-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
-        <p class="text-gray-300 font-medium text-sm md:text-base">Seret foto atau klik</p>
-        <p class="text-gray-500 text-xs md:text-sm mt-1">JPG, PNG, WebP (Max 5MB)</p><input id="image-input" type="file" accept="image/*" multiple class="hidden">
+        <p class="text-gray-300 font-medium">Seret foto di sini atau klik</p>
+        <p class="text-gray-500 text-sm mt-1">JPG, PNG, WebP (Max 5MB per file)</p><input id="image-input" type="file" accept="image/*" multiple class="hidden">
        </div><!-- Image Preview -->
        <div id="image-preview" class="hidden mt-4">
-        <p class="text-sm text-gray-400 mb-3">Foto dipilih:</p>
-        <div id="preview-container" class="grid grid-cols-3 md:grid-cols-4 gap-2 md:gap-3 mb-4"></div>
-       </div><button id="upload-btn" class="w-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-semibold py-3 px-6 rounded-xl transition-all btn-glow flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4 text-sm md:text-base" disabled>
+        <p class="text-sm text-gray-400 mb-3">Foto yang dipilih:</p>
+        <div id="preview-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4"></div>
+       </div><button id="upload-btn" class="w-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-semibold py-3 px-6 rounded-xl transition-all btn-glow flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4" disabled>
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
         </svg><span>Kirim Foto</span> </button>
       </div>
      </div>
     </section><!-- Media History -->
-    <section class="glass-card rounded-3xl p-6 slide-up flex-1 overflow-hidden flex flex-col" style="animation-delay: 0.2s">
-     <div class="flex items-center justify-between mb-4 flex-shrink-0">
+    <section class="glass-card rounded-3xl p-6 slide-up" style="animation-delay: 0.2s">
+     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center gap-2">
        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
        </svg>
        <h2 class="text-lg font-semibold">Riwayat Transfer</h2>
       </div><span id="item-count" class="text-sm text-gray-400">0 item</span>
      </div>
-     <div id="media-list" class="space-y-3 overflow-y-auto scrollbar-custom flex-1 pr-2"><!-- Empty State -->
+     <div id="media-list" class="space-y-3 max-h-[500px] overflow-y-auto scrollbar-custom pr-2"><!-- Empty State -->
       <div id="empty-state" class="text-center py-12">
        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
         <svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
        </div>
        <p class="text-gray-500">Belum ada transfer</p>
-       <p class="text-gray-600 text-sm mt-1">Mulai dengan mengirim teks!</p>
+       <p class="text-gray-600 text-sm mt-1">Mulai dengan mengirim teks atau foto!</p>
       </div>
      </div>
     </section>
    </main><!-- Modal: Show Session ID -->
-   <div id="session-modal" class="modal-overlay hidden">
+   <div id="session-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
     <div class="glass-card rounded-3xl p-8 max-w-sm w-full neon-border slide-up">
      <div class="flex items-center gap-3 mb-6">
       <div class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
@@ -282,18 +270,18 @@
       </div>
       <h3 class="text-xl font-bold">ID Sesi Anda</h3>
      </div>
-     <p class="text-gray-400 text-sm mb-4">Bagikan ID ini ke teman untuk bergabung:</p>
+     <p class="text-gray-400 text-sm mb-4">Bagikan ID ini ke teman untuk bergabung ke sesi yang sama:</p>
      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
       <div class="text-center">
-       <p id="session-display" class="text-4xl font-mono font-bold text-indigo-400 tracking-[0.5em]">XXXX</p>
+       <p id="session-display" class="text-4xl font-mono font-bold text-indigo-400 tracking-[0.5em]">----</p>
        <p class="text-xs text-gray-500 mt-3">4 karakter unik</p>
       </div>
      </div><button id="copy-session-btn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3 px-6 rounded-xl transition-all btn-glow flex items-center justify-center gap-2 mb-3">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg><span>Salin ID</span> </button> <button id="close-session-modal" class="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all">Tutup</button>
+      </svg><span>Salin ID</span> </button> <button id="close-session-modal" class="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all"> Tutup </button>
     </div>
    </div><!-- Modal: Join Session -->
-   <div id="join-modal" class="modal-overlay hidden">
+   <div id="join-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
     <div class="glass-card rounded-3xl p-8 max-w-sm w-full neon-border slide-up">
      <div class="flex items-center gap-3 mb-6">
       <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
@@ -302,14 +290,12 @@
       </div>
       <h3 class="text-xl font-bold">Bergabung ke Sesi</h3>
      </div>
-     <p class="text-gray-400 text-sm mb-4">Masukkan ID sesi:</p><input id="join-input" type="text" placeholder="a3f7" maxlength="4" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all text-center text-3xl font-mono tracking-[0.3em] mb-4 uppercase">
-     <div class="mb-6"><label class="text-sm text-gray-300 mb-2 block">Pilih device tujuan:</label> <select id="target-device" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"> <option value="">-- Pilih Device --</option> <option value="📱 Android">📱 Android</option> <option value="📱 iOS">📱 iOS</option> <option value="💻 Windows">💻 Windows</option> <option value="🍎 macOS">🍎 macOS</option> <option value="🐧 Linux">🐧 Linux</option> <option value="🖥️ Desktop">🖥️ Desktop</option> </select>
-     </div><button id="join-session-btn" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-3 px-6 rounded-xl transition-all btn-glow flex items-center justify-center gap-2 mb-3">
+     <p class="text-gray-400 text-sm mb-4">Masukkan ID sesi yang ingin diikuti:</p><input id="join-input" type="text" placeholder="a3f7" maxlength="4" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all text-center text-3xl font-mono tracking-[0.3em] mb-6 uppercase"> <button id="join-session-btn" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-3 px-6 rounded-xl transition-all btn-glow flex items-center justify-center gap-2 mb-3">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg><span>Bergabung</span> </button> <button id="close-join-modal" class="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all">Batal</button>
+      </svg><span>Bergabung</span> </button> <button id="close-join-modal" class="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all"> Batal </button>
     </div>
    </div><!-- Toast Container -->
-   <div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 space-y-2 pointer-events-none"></div>
+   <div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 space-y-2"></div>
   </div>
   <script>
     const defaultConfig = {
@@ -319,9 +305,9 @@
 
     let currentDevice = 'Unknown';
     let sessionId = null;
-    let targetDevice = '';
     let selectedImages = [];
-    let allData = [];
+    let itemCount = 0;
+    let allItems = [];
 
     // Detect device
     function detectDevice() {
@@ -355,9 +341,9 @@
         info: 'bg-indigo-500'
       };
 
-      toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 pointer-events-auto`;
+      toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2`;
       toast.innerHTML = `
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           ${type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>' :
             type === 'error' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>' :
             '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'}
@@ -376,10 +362,9 @@
     }
 
     // Time ago
-    function timeAgo(isoString) {
-      const date = new Date(isoString);
-      const now = new Date();
-      const diff = now - date;
+    function timeAgo(timestamp) {
+      const now = Date.now();
+      const diff = now - timestamp;
       const seconds = Math.floor(diff / 1000);
 
       if (seconds < 60) return 'Baru saja';
@@ -397,31 +382,21 @@
       return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     }
 
-    // Data SDK Handler
-    const dataHandler = {
-      onDataChanged(data) {
-        allData = data;
-        renderItems(data);
-      }
-    };
-
     // Render items
-    function renderItems(data) {
+    function renderItems() {
       const list = document.getElementById('media-list');
       const emptyState = document.getElementById('empty-state');
       const count = document.getElementById('item-count');
 
-      const filtered = data.filter(item => !targetDevice || item.target_device === targetDevice || item.target_device === '');
+      itemCount = allItems.length;
+      count.textContent = `${itemCount} item`;
 
-      count.textContent = `${filtered.length} item`;
-
-      if (filtered.length === 0) {
-        emptyState.style.display = 'block';
-        list.innerHTML = '<div id="empty-state" class="text-center py-12"><div class="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center"><svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div><p class="text-gray-500">Belum ada transfer</p><p class="text-gray-600 text-sm mt-1">Mulai dengan mengirim teks!</p></div>';
+      if (itemCount === 0) {
+        list.innerHTML = '<div class="text-center py-12"><div class="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center"><svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div><p class="text-gray-500">Belum ada transfer</p><p class="text-gray-600 text-sm mt-1">Mulai dengan mengirim teks atau foto!</p></div>';
         return;
       }
 
-      const sorted = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const sorted = [...allItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
       list.innerHTML = '';
       sorted.forEach((item) => {
@@ -429,8 +404,8 @@
           const div = document.createElement('div');
           div.className = 'item-card glass-card rounded-2xl overflow-hidden slide-up';
           div.innerHTML = `
-            <div class="media-item h-40 md:h-48">
-              <img src="${escapeHtml(item.content)}" alt="Shared">
+            <div class="media-item h-48">
+              <img src="${escapeHtml(item.content)}" alt="Shared" loading="lazy">
               <button class="download-btn" title="Download">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -442,7 +417,7 @@
                 <span class="device-badge bg-pink-500/20 text-pink-400">${item.device}</span>
                 <div class="flex items-center gap-2">
                   <span class="text-xs text-gray-500">${timeAgo(item.createdAt)}</span>
-                  <button class="delete-btn text-red-400 hover:text-red-300 transition-all p-1">
+                  <button class="delete-btn text-red-400 hover:text-red-300 transition-all p-1" data-id="${item.__backendId}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
@@ -455,12 +430,7 @@
           list.appendChild(div);
 
           div.querySelector('.download-btn').addEventListener('click', () => downloadImage(item.content, item.file_name));
-          div.querySelector('.delete-btn').addEventListener('click', async () => {
-            const result = await window.dataSdk.delete(item);
-            if (result.isOk) {
-              showToast('Dihapus', 'success');
-            }
-          });
+          div.querySelector('.delete-btn').addEventListener('click', () => deleteItem(item));
         } else {
           const div = document.createElement('div');
           div.className = 'item-card bg-white/5 rounded-2xl p-4 cursor-pointer group slide-up';
@@ -469,7 +439,7 @@
               <span class="device-badge bg-indigo-500/20 text-indigo-400">${item.device}</span>
               <div class="flex items-center gap-2">
                 <span class="text-xs text-gray-500">${timeAgo(item.createdAt)}</span>
-                <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-all p-1">
+                <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-all p-1" data-id="${item.__backendId}">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                   </svg>
@@ -497,12 +467,7 @@
           });
 
           list.appendChild(div);
-          div.querySelector('.delete-btn').addEventListener('click', async () => {
-            const result = await window.dataSdk.delete(item);
-            if (result.isOk) {
-              showToast('Dihapus', 'success');
-            }
-          });
+          div.querySelector('.delete-btn').addEventListener('click', () => deleteItem(item));
         }
       });
     }
@@ -515,6 +480,15 @@
       link.click();
       document.body.removeChild(link);
       showToast('Download dimulai', 'success');
+    }
+
+    async function deleteItem(item) {
+      const result = await window.dataSdk.delete(item);
+      if (result.isOk) {
+        showToast('Item dihapus', 'success');
+      } else {
+        showToast('Gagal menghapus item', 'error');
+      }
     }
 
     function escapeHtml(text) {
@@ -545,6 +519,7 @@
 
       preview.classList.remove('hidden');
       uploadBtn.disabled = false;
+
       container.innerHTML = '';
 
       for (let i = 0; i < selectedImages.length; i++) {
@@ -574,7 +549,15 @@
       });
     }
 
-    // Initialize SDK
+    // Data SDK Handler
+    const dataHandler = {
+      onDataChanged(data) {
+        allItems = data;
+        renderItems();
+      }
+    };
+
+    // Initialize app
     async function initApp() {
       currentDevice = detectDevice();
       document.getElementById('device-indicator').textContent = currentDevice;
@@ -588,10 +571,11 @@
       sessionId = saved;
       document.getElementById('session-display').textContent = sessionId.toUpperCase();
 
-      // Init Data SDK
+      // Initialize Data SDK
       const initResult = await window.dataSdk.init(dataHandler);
       if (!initResult.isOk) {
-        showToast('Gagal init SDK', 'error');
+        console.error('Failed to init Data SDK');
+        showToast('Error initializing app', 'error');
         return;
       }
 
@@ -643,27 +627,17 @@
 
       document.getElementById('join-session-btn').addEventListener('click', () => {
         const input = document.getElementById('join-input').value.trim().toLowerCase();
-        const device = document.getElementById('target-device').value;
-
         if (input.length !== 4) {
           showToast('ID harus 4 karakter', 'error');
           return;
         }
-
-        if (!device) {
-          showToast('Pilih device tujuan', 'error');
-          return;
-        }
-
         localStorage.setItem('fastshare_session', input);
         sessionId = input;
-        targetDevice = device;
         document.getElementById('session-display').textContent = input.toUpperCase();
-        showToast(`Bergabung ke ${device}`, 'success');
+        showToast(`Bergabung ke sesi ${input.toUpperCase()}`, 'success');
         document.getElementById('join-modal').classList.add('hidden');
         document.getElementById('join-input').value = '';
-        document.getElementById('target-device').value = '';
-        renderItems(allData);
+        location.reload();
       });
 
       // Image upload
@@ -703,8 +677,8 @@
           return;
         }
 
-        if (allData.length >= 999) {
-          showToast('Batas maksimum tercapai!', 'error');
+        if (allItems.length >= 999) {
+          showToast('Batas maksimum 999 item tercapai!', 'error');
           return;
         }
 
@@ -712,12 +686,12 @@
         btn.disabled = true;
 
         const item = {
+          id: Date.now().toString(),
           content: content,
           type: 'text',
           device: currentDevice,
           session_id: sessionId,
-          target_device: targetDevice,
-          createdAt: new Date().toISOString()
+          createdAt: Date.now()
         };
 
         const result = await window.dataSdk.create(item);
@@ -727,7 +701,7 @@
           input.value = '';
           showToast('Teks berhasil dikirim!', 'success');
         } else {
-          showToast('Gagal mengirim', 'error');
+          showToast('Gagal mengirim teks', 'error');
         }
       });
 
@@ -751,31 +725,37 @@
 
         const btn = document.getElementById('upload-btn');
         btn.disabled = true;
-        btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/></svg><span>Mengunggah...</span>';
+        btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="32"/></svg><span>Mengunggah...</span>';
 
+        let successCount = 0;
         for (const file of selectedImages) {
           if (file.size > 5 * 1024 * 1024) {
             showToast(`${file.name} terlalu besar`, 'error');
             continue;
           }
 
+          if (allItems.length >= 999) {
+            showToast('Batas maksimum tercapai!', 'error');
+            break;
+          }
+
           try {
             const dataUrl = await fileToBase64(file);
 
             const item = {
+              id: Date.now().toString(),
               content: dataUrl,
               type: 'image',
               device: currentDevice,
-              session_id: sessionId,
-              target_device: targetDevice,
               file_size: formatFileSize(file.size),
               file_name: file.name,
-              createdAt: new Date().toISOString()
+              session_id: sessionId,
+              createdAt: Date.now()
             };
 
             const result = await window.dataSdk.create(item);
             if (result.isOk) {
-              downloadImage(dataUrl, file.name);
+              successCount++;
             }
           } catch (err) {
             showToast('Error memproses foto', 'error');
@@ -785,7 +765,10 @@
         selectedImages = [];
         await updateImagePreview();
         document.getElementById('image-input').value = '';
-        showToast('Semua foto berhasil dikirim!', 'success');
+        
+        if (successCount > 0) {
+          showToast(`${successCount} foto berhasil dikirim!`, 'success');
+        }
 
         btn.disabled = false;
         btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg><span>Kirim Foto</span>';
@@ -800,8 +783,7 @@
       });
     }
 
-    // Start app
     initApp();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d2b6f2401ad9855',t:'MTc3MTg5OTEwNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d2b77144308f904',t:'MTc3MTg5OTQzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
