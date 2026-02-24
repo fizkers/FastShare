@@ -6,7 +6,7 @@
   <title>FastShare</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="/_sdk/element_sdk.js"></script>
-  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode.js/1.5.3/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Space Grotesk', sans-serif; }
@@ -304,10 +304,17 @@
     };
 
     let currentDevice = 'Unknown';
-    let sessionId = null;
     let selectedImages = [];
-    let itemCount = 0;
-    let allItems = [];
+    let currentData = [];
+    const TRANSFER_LIMIT = 10;
+
+    // Data handler untuk Canva Data SDK
+    const dataHandler = {
+      onDataChanged(data) {
+        currentData = data;
+        renderItems(data);
+      }
+    };
 
     // Detect device
     function detectDevice() {
@@ -328,6 +335,24 @@
         id += chars.charAt(Math.floor(Math.random() * chars.length));
       }
       return id;
+    }
+
+    // Generate QR Code
+    function generateQRCode(sessionId) {
+      const container = document.getElementById('qrcode-container');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      const url = `${window.location.origin}${window.location.pathname}?join=${sessionId}`;
+      
+      new QRCode(container, {
+        text: url,
+        width: 200,
+        height: 200,
+        colorDark: '#ffffff',
+        colorLight: '#0f0f23',
+        correctLevel: QRCode.CorrectLevel.H
+      });
     }
 
     // Show toast
@@ -364,7 +389,7 @@
     // Time ago
     function timeAgo(timestamp) {
       const now = Date.now();
-      const diff = now - timestamp;
+      const diff = now - new Date(timestamp).getTime();
       const seconds = Math.floor(diff / 1000);
 
       if (seconds < 60) return 'Baru saja';
@@ -383,20 +408,21 @@
     }
 
     // Render items
-    function renderItems() {
+    function renderItems(data) {
       const list = document.getElementById('media-list');
       const emptyState = document.getElementById('empty-state');
       const count = document.getElementById('item-count');
 
-      itemCount = allItems.length;
+      const itemCount = data.length;
       count.textContent = `${itemCount} item`;
 
       if (itemCount === 0) {
-        list.innerHTML = '<div class="text-center py-12"><div class="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center"><svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div><p class="text-gray-500">Belum ada transfer</p><p class="text-gray-600 text-sm mt-1">Mulai dengan mengirim teks atau foto!</p></div>';
+        emptyState.style.display = 'block';
+        list.innerHTML = '<div id="empty-state" class="text-center py-12"><div class="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center"><svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div><p class="text-gray-500">Belum ada transfer</p><p class="text-gray-600 text-sm mt-1">Mulai dengan mengirim teks atau foto!</p></div>';
         return;
       }
 
-      const sorted = [...allItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const sorted = [...data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       list.innerHTML = '';
       sorted.forEach((item) => {
@@ -405,7 +431,7 @@
           div.className = 'item-card glass-card rounded-2xl overflow-hidden slide-up';
           div.innerHTML = `
             <div class="media-item h-48">
-              <img src="${escapeHtml(item.content)}" alt="Shared" loading="lazy">
+              <img src="${escapeHtml(item.content)}" alt="Shared">
               <button class="download-btn" title="Download">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -417,7 +443,7 @@
                 <span class="device-badge bg-pink-500/20 text-pink-400">${item.device}</span>
                 <div class="flex items-center gap-2">
                   <span class="text-xs text-gray-500">${timeAgo(item.createdAt)}</span>
-                  <button class="delete-btn text-red-400 hover:text-red-300 transition-all p-1" data-id="${item.__backendId}">
+                  <button class="delete-btn text-red-400 hover:text-red-300 transition-all p-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
@@ -430,7 +456,11 @@
           list.appendChild(div);
 
           div.querySelector('.download-btn').addEventListener('click', () => downloadImage(item.content, item.file_name));
-          div.querySelector('.delete-btn').addEventListener('click', () => deleteItem(item));
+          div.querySelector('.delete-btn').addEventListener('click', async () => {
+            if (item.__backendId) {
+              await window.dataSdk.delete(item);
+            }
+          });
         } else {
           const div = document.createElement('div');
           div.className = 'item-card bg-white/5 rounded-2xl p-4 cursor-pointer group slide-up';
@@ -439,7 +469,7 @@
               <span class="device-badge bg-indigo-500/20 text-indigo-400">${item.device}</span>
               <div class="flex items-center gap-2">
                 <span class="text-xs text-gray-500">${timeAgo(item.createdAt)}</span>
-                <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-all p-1" data-id="${item.__backendId}">
+                <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-all p-1">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                   </svg>
@@ -467,7 +497,11 @@
           });
 
           list.appendChild(div);
-          div.querySelector('.delete-btn').addEventListener('click', () => deleteItem(item));
+          div.querySelector('.delete-btn').addEventListener('click', async () => {
+            if (item.__backendId) {
+              await window.dataSdk.delete(item);
+            }
+          });
         }
       });
     }
@@ -480,15 +514,6 @@
       link.click();
       document.body.removeChild(link);
       showToast('Download dimulai', 'success');
-    }
-
-    async function deleteItem(item) {
-      const result = await window.dataSdk.delete(item);
-      if (result.isOk) {
-        showToast('Item dihapus', 'success');
-      } else {
-        showToast('Gagal menghapus item', 'error');
-      }
     }
 
     function escapeHtml(text) {
@@ -549,13 +574,19 @@
       });
     }
 
-    // Data SDK Handler
-    const dataHandler = {
-      onDataChanged(data) {
-        allItems = data;
-        renderItems();
+    // Auto delete items setiap 10 transfer
+    async function autoDeleteOldestIfNeeded() {
+      if (currentData.length >= TRANSFER_LIMIT) {
+        // Hapus item tertua
+        const sorted = [...currentData].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        const oldest = sorted[0];
+        
+        if (oldest && oldest.__backendId) {
+          await window.dataSdk.delete(oldest);
+          showToast(`Auto-hapus data lama (${TRANSFER_LIMIT} transfer tercapai)`, 'info');
+        }
       }
-    };
+    }
 
     // Initialize app
     async function initApp() {
@@ -563,21 +594,12 @@
       document.getElementById('device-indicator').textContent = currentDevice;
 
       // Get or create session ID
-      let saved = localStorage.getItem('fastshare_session');
-      if (!saved) {
-        saved = generateSessionId();
-        localStorage.setItem('fastshare_session', saved);
+      let sessionId = localStorage.getItem('fastshare_session');
+      if (!sessionId) {
+        sessionId = generateSessionId();
+        localStorage.setItem('fastshare_session', sessionId);
       }
-      sessionId = saved;
       document.getElementById('session-display').textContent = sessionId.toUpperCase();
-
-      // Initialize Data SDK
-      const initResult = await window.dataSdk.init(dataHandler);
-      if (!initResult.isOk) {
-        console.error('Failed to init Data SDK');
-        showToast('Error initializing app', 'error');
-        return;
-      }
 
       if (window.elementSdk) {
         window.elementSdk.init({
@@ -599,6 +621,13 @@
         });
       }
 
+      // Initialize Data SDK
+      const initResult = await window.dataSdk.init(dataHandler);
+      if (!initResult.isOk) {
+        console.error('Failed to initialize Data SDK');
+        return;
+      }
+
       // Modal controls
       document.getElementById('session-btn').addEventListener('click', () => {
         document.getElementById('session-modal').classList.remove('hidden');
@@ -607,6 +636,22 @@
       document.getElementById('close-session-modal').addEventListener('click', () => {
         document.getElementById('session-modal').classList.add('hidden');
       });
+
+      document.getElementById('qrcode-btn').addEventListener('click', () => {
+        generateQRCode(sessionId);
+        const qrDisplay = document.getElementById('qr-session-display');
+        if (qrDisplay) qrDisplay.textContent = sessionId.toUpperCase();
+        const qrModal = document.getElementById('qrcode-modal');
+        if (qrModal) qrModal.classList.remove('hidden');
+      });
+
+      const closeQrBtn = document.getElementById('close-qrcode-modal');
+      if (closeQrBtn) {
+        closeQrBtn.addEventListener('click', () => {
+          const qrModal = document.getElementById('qrcode-modal');
+          if (qrModal) qrModal.classList.add('hidden');
+        });
+      }
 
       document.getElementById('join-btn').addEventListener('click', () => {
         document.getElementById('join-modal').classList.remove('hidden');
@@ -639,6 +684,16 @@
         document.getElementById('join-input').value = '';
         location.reload();
       });
+
+      // Check URL parameter for QR scan
+      const urlParams = new URLSearchParams(window.location.search);
+      const joinParam = urlParams.get('join');
+      if (joinParam && joinParam.length === 4) {
+        localStorage.setItem('fastshare_session', joinParam.toLowerCase());
+        sessionId = joinParam.toLowerCase();
+        showToast(`✅ Bergabung ke sesi ${joinParam.toUpperCase()}!`, 'success');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
 
       // Image upload
       const dropZone = document.getElementById('drop-zone');
@@ -677,32 +732,25 @@
           return;
         }
 
-        if (allItems.length >= 999) {
-          showToast('Batas maksimum 999 item tercapai!', 'error');
-          return;
-        }
-
         const btn = document.getElementById('send-btn');
         btn.disabled = true;
 
         const item = {
-          id: Date.now().toString(),
           content: content,
           type: 'text',
           device: currentDevice,
-          session_id: sessionId,
-          createdAt: Date.now()
+          createdAt: new Date().toISOString()
         };
 
         const result = await window.dataSdk.create(item);
-        btn.disabled = false;
-
         if (result.isOk) {
           input.value = '';
           showToast('Teks berhasil dikirim!', 'success');
+          await autoDeleteOldestIfNeeded();
         } else {
           showToast('Gagal mengirim teks', 'error');
         }
+        btn.disabled = false;
       });
 
       // Paste text
@@ -727,35 +775,27 @@
         btn.disabled = true;
         btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="32"/></svg><span>Mengunggah...</span>';
 
-        let successCount = 0;
         for (const file of selectedImages) {
           if (file.size > 5 * 1024 * 1024) {
             showToast(`${file.name} terlalu besar`, 'error');
             continue;
           }
 
-          if (allItems.length >= 999) {
-            showToast('Batas maksimum tercapai!', 'error');
-            break;
-          }
-
           try {
             const dataUrl = await fileToBase64(file);
 
             const item = {
-              id: Date.now().toString(),
               content: dataUrl,
               type: 'image',
               device: currentDevice,
               file_size: formatFileSize(file.size),
               file_name: file.name,
-              session_id: sessionId,
-              createdAt: Date.now()
+              createdAt: new Date().toISOString()
             };
 
             const result = await window.dataSdk.create(item);
             if (result.isOk) {
-              successCount++;
+              await autoDeleteOldestIfNeeded();
             }
           } catch (err) {
             showToast('Error memproses foto', 'error');
@@ -765,10 +805,7 @@
         selectedImages = [];
         await updateImagePreview();
         document.getElementById('image-input').value = '';
-        
-        if (successCount > 0) {
-          showToast(`${successCount} foto berhasil dikirim!`, 'success');
-        }
+        showToast('Semua foto berhasil dikirim!', 'success');
 
         btn.disabled = false;
         btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg><span>Kirim Foto</span>';
@@ -785,5 +822,5 @@
 
     initApp();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d2b77144308f904',t:'MTc3MTg5OTQzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d2b7f1a445df904',t:'MTc3MTg5OTc2MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
