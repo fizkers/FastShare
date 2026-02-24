@@ -6,9 +6,7 @@
   <title>FastShare</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="/_sdk/element_sdk.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode.js/1.5.3/qrcode.min.js"></script>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Space Grotesk', sans-serif; }
@@ -175,9 +173,34 @@
     .media-item:hover .download-btn {
       opacity: 1;
     }
+
+    .file-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 10px;
+      color: white;
+    }
+
+    .doc-preview {
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    .doc-badge {
+      font-size: 0.65rem;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
   </style>
   <style>body { box-sizing: border-box; }</style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
  </head>
  <body class="h-full gradient-bg text-white overflow-auto">
   <div id="app" class="min-h-full w-full p-4 md:p-8"><!-- Header -->
@@ -190,16 +213,14 @@
       </div>
       <div>
        <h1 id="app-title" class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">FastShare</h1>
-       <p class="text-gray-400 text-sm">Transfer Foto &amp; Teks Instan</p>
+       <p class="text-gray-400 text-sm">Transfer Foto, Teks, &amp; Dokumen Instan</p>
       </div>
      </div>
      <div class="flex items-center gap-3 flex-wrap">
       <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5">
        <div class="pulse-dot w-2 h-2 rounded-full bg-emerald-400"></div><span id="device-indicator" class="text-sm text-gray-300 font-medium">Mendeteksi device...</span>
       </div>
-      <div class="flex items-center gap-2 border-l border-white/10 pl-3"><button id="qrcode-btn" class="bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-3 rounded-lg transition-all text-sm flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg><span>QR</span> </button> <button id="session-btn" class="bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-3 rounded-lg transition-all text-sm flex items-center gap-2">
+      <div class="flex items-center gap-2 border-l border-white/10 pl-3"><button id="session-btn" class="bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-3 rounded-lg transition-all text-sm flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.658 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
         </svg><span>ID</span> </button> <button id="join-btn" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium py-2 px-3 rounded-lg transition-all text-sm btn-glow flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -213,7 +234,7 @@
      <div class="flex items-center gap-2 mb-4">
       <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
       </svg>
-      <h2 class="text-lg font-semibold">Kirim Teks atau Foto</h2>
+      <h2 class="text-lg font-semibold">Kirim Teks, Foto, atau Dokumen</h2>
      </div>
      <div class="space-y-6"><!-- Text Section -->
       <div><textarea id="text-input" placeholder="Ketik atau tempel teks di sini..." class="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none mono text-sm"></textarea>
@@ -240,6 +261,23 @@
        </div><button id="upload-btn" class="w-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-semibold py-3 px-6 rounded-xl transition-all btn-glow flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4" disabled>
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
         </svg><span>Kirim Foto</span> </button>
+      </div><!-- Divider -->
+      <div class="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div><!-- Document Section -->
+      <div><label class="flex items-center gap-2 text-sm font-medium text-gray-300 mb-3">
+        <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg><span>Upload Dokumen</span> </label>
+       <div id="drop-zone-doc" class="drop-zone border-2 border-dashed border-orange-500/50 rounded-2xl p-8 text-center cursor-pointer hover:border-orange-500 hover:bg-orange-500/5 transition-all">
+        <svg class="w-12 h-12 mx-auto mb-3 text-orange-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <p class="text-gray-300 font-medium">Seret dokumen di sini atau klik</p>
+        <p class="text-gray-500 text-sm mt-1">PDF, Word, Excel, PowerPoint, ZIP, dll (Max 25MB)</p><input id="doc-input" type="file" multiple class="hidden">
+       </div><!-- Document Preview -->
+       <div id="doc-preview" class="hidden mt-4">
+        <p class="text-sm text-gray-400 mb-3">Dokumen yang dipilih:</p>
+        <div id="doc-preview-container" class="space-y-2 mb-4"></div>
+       </div><button id="upload-doc-btn" class="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-semibold py-3 px-6 rounded-xl transition-all btn-glow flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4" disabled>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+        </svg><span>Kirim Dokumen</span> </button>
       </div>
      </div>
     </section><!-- Media History -->
@@ -258,27 +296,11 @@
         </svg>
        </div>
        <p class="text-gray-500">Belum ada transfer</p>
-       <p class="text-gray-600 text-sm mt-1">Mulai dengan mengirim teks atau foto!</p>
+       <p class="text-gray-600 text-sm mt-1">Mulai dengan mengirim teks, foto, atau dokumen!</p>
       </div>
      </div>
     </section>
-   </main><!-- Modal: QR Code -->
-   <div id="qrcode-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
-    <div class="glass-card rounded-3xl p-8 max-w-sm w-full neon-border slide-up">
-     <div class="flex items-center gap-3 mb-6">
-      <div class="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center">
-       <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-       </svg>
-      </div>
-      <h3 class="text-xl font-bold">QR Code Sesi</h3>
-     </div>
-     <p class="text-gray-400 text-sm mb-4">Scan QR code ini untuk bergabung ke sesi:</p>
-     <div class="bg-white p-4 rounded-2xl mb-6 flex justify-center">
-      <div id="qrcode-container" class="w-48 h-48"></div>
-     </div>
-     <p class="text-center text-gray-400 text-sm mb-6">Sesi: <span id="qr-session-display" class="font-mono font-bold text-pink-400">----</span></p><button id="close-qrcode-modal" class="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all">Tutup</button>
-    </div>
-   </div><!-- Modal: Show Session ID -->
+   </main><!-- Modal: Show Session ID -->
    <div id="session-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
     <div class="glass-card rounded-3xl p-8 max-w-sm w-full neon-border slide-up">
      <div class="flex items-center gap-3 mb-6">
@@ -316,22 +338,6 @@
    <div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 space-y-2"></div>
   </div>
   <script>
-    // Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyAHxj9ArEZoQhqHbxrpIAhSS4lSxgpKF74",
-      authDomain: "fastshare-bd6c9.firebaseapp.com",
-      databaseURL: "https://fastshare-bd6c9-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "fastshare-bd6c9",
-      storageBucket: "fastshare-bd6c9.firebasestorage.app",
-      messagingSenderId: "896882918938",
-      appId: "1:896882918938:web:a0e2e15f7d7123e92eb3a3",
-      measurementId: "G-FD7ERGJRY2"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
     const defaultConfig = {
       app_title: 'FastShare',
       placeholder_text: 'Ketik atau tempel teks di sini...'
@@ -340,9 +346,317 @@
     let currentDevice = 'Unknown';
     let sessionId = null;
     let selectedImages = [];
+    let selectedDocs = [];
     let itemCount = 0;
+    let allItems = [];
 
-    // Detect device
+    // Initialize Data SDK
+    const dataHandler = {
+      onDataChanged(data) {
+        allItems = data || [];
+        renderItems(allItems);
+      }
+    };
+
+    // Initialize app
+    async function initApp() {
+      // Init Data SDK
+      const initResult = await window.dataSdk.init(dataHandler);
+      if (!initResult.isOk) {
+        console.error('Failed to init Data SDK');
+        return;
+      }
+
+      currentDevice = detectDevice();
+      document.getElementById('device-indicator').textContent = currentDevice;
+
+      // Get or create session ID
+      let saved = localStorage.getItem('fastshare_session');
+      if (!saved) {
+        saved = generateSessionId();
+        localStorage.setItem('fastshare_session', saved);
+      }
+      sessionId = saved;
+      document.getElementById('session-display').textContent = sessionId.toUpperCase();
+
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (config) => {
+            document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
+            document.getElementById('text-input').placeholder = config.placeholder_text || defaultConfig.placeholder_text;
+          },
+          mapToCapabilities: () => ({
+            recolorables: [],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ['app_title', config.app_title || defaultConfig.app_title],
+            ['placeholder_text', config.placeholder_text || defaultConfig.placeholder_text]
+          ])
+        });
+      }
+
+      // Modal controls
+      document.getElementById('session-btn').addEventListener('click', () => {
+        document.getElementById('session-modal').classList.remove('hidden');
+      });
+
+      document.getElementById('close-session-modal').addEventListener('click', () => {
+        document.getElementById('session-modal').classList.add('hidden');
+      });
+
+      document.getElementById('join-btn').addEventListener('click', () => {
+        document.getElementById('join-modal').classList.remove('hidden');
+      });
+
+      document.getElementById('close-join-modal').addEventListener('click', () => {
+        document.getElementById('join-modal').classList.add('hidden');
+      });
+
+      document.getElementById('copy-session-btn').addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(sessionId);
+          showToast('ID disalin!', 'success');
+        } catch {
+          showToast('Gagal menyalin', 'error');
+        }
+      });
+
+      document.getElementById('join-session-btn').addEventListener('click', () => {
+        const input = document.getElementById('join-input').value.trim().toLowerCase();
+        if (input.length !== 4) {
+          showToast('ID harus 4 karakter', 'error');
+          return;
+        }
+        localStorage.setItem('fastshare_session', input);
+        sessionId = input;
+        document.getElementById('session-display').textContent = input.toUpperCase();
+        showToast(`Bergabung ke sesi ${input.toUpperCase()}`, 'success');
+        document.getElementById('join-modal').classList.add('hidden');
+        document.getElementById('join-input').value = '';
+        location.reload();
+      });
+
+      // Image upload
+      const dropZone = document.getElementById('drop-zone');
+      const imageInput = document.getElementById('image-input');
+
+      dropZone.addEventListener('click', () => imageInput.click());
+
+      imageInput.addEventListener('change', async (e) => {
+        selectedImages.push(...Array.from(e.target.files || []));
+        await updateImagePreview();
+      });
+
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+      });
+
+      dropZone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        selectedImages.push(...Array.from(e.dataTransfer.files));
+        await updateImagePreview();
+      });
+
+      // Document upload
+      const dropZoneDoc = document.getElementById('drop-zone-doc');
+      const docInput = document.getElementById('doc-input');
+
+      dropZoneDoc.addEventListener('click', () => docInput.click());
+
+      docInput.addEventListener('change', async (e) => {
+        selectedDocs.push(...Array.from(e.target.files || []));
+        await updateDocPreview();
+      });
+
+      dropZoneDoc.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZoneDoc.classList.add('dragover');
+      });
+
+      dropZoneDoc.addEventListener('dragleave', () => {
+        dropZoneDoc.classList.remove('dragover');
+      });
+
+      dropZoneDoc.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        dropZoneDoc.classList.remove('dragover');
+        selectedDocs.push(...Array.from(e.dataTransfer.files));
+        await updateDocPreview();
+      });
+
+      // Send text
+      document.getElementById('send-btn').addEventListener('click', async () => {
+        const input = document.getElementById('text-input');
+        const content = input.value.trim();
+
+        if (!content) {
+          showToast('Ketik teks terlebih dahulu!', 'error');
+          return;
+        }
+
+        if (allItems.length >= 999) {
+          showToast('Batas maksimum tercapai!', 'error');
+          return;
+        }
+
+        const btn = document.getElementById('send-btn');
+        btn.disabled = true;
+
+        const item = {
+          content: content,
+          type: 'text',
+          device: currentDevice,
+          file_size: '',
+          file_name: '',
+          createdAt: new Date().toISOString()
+        };
+
+        const result = await window.dataSdk.create(item);
+        if (!result.isOk) {
+          showToast('Gagal mengirim teks', 'error');
+          btn.disabled = false;
+          return;
+        }
+
+        input.value = '';
+        btn.disabled = false;
+        showToast('Teks berhasil dikirim!', 'success');
+      });
+
+      // Paste text
+      document.getElementById('paste-btn').addEventListener('click', async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          document.getElementById('text-input').value = text;
+          showToast('Teks ditempel!', 'success');
+        } catch {
+          showToast('Tidak bisa mengakses clipboard', 'error');
+        }
+      });
+
+      // Upload images
+      document.getElementById('upload-btn').addEventListener('click', async () => {
+        if (selectedImages.length === 0) {
+          showToast('Pilih foto terlebih dahulu!', 'error');
+          return;
+        }
+
+        const btn = document.getElementById('upload-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="32"/></svg><span>Mengunggah...</span>';
+
+        for (const file of selectedImages) {
+          if (file.size > 5 * 1024 * 1024) {
+            showToast(`${file.name} terlalu besar`, 'error');
+            continue;
+          }
+
+          if (allItems.length >= 999) {
+            showToast('Batas maksimum tercapai!', 'error');
+            break;
+          }
+
+          try {
+            const dataUrl = await fileToBase64(file);
+
+            const item = {
+              content: dataUrl,
+              type: 'image',
+              device: currentDevice,
+              file_size: formatFileSize(file.size),
+              file_name: file.name,
+              createdAt: new Date().toISOString()
+            };
+
+            const result = await window.dataSdk.create(item);
+            if (!result.isOk) {
+              showToast('Gagal mengirim foto', 'error');
+            }
+          } catch (err) {
+            showToast('Error memproses foto', 'error');
+          }
+        }
+
+        selectedImages = [];
+        await updateImagePreview();
+        document.getElementById('image-input').value = '';
+        showToast('Semua foto berhasil dikirim!', 'success');
+
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg><span>Kirim Foto</span>';
+      });
+
+      // Upload documents
+      document.getElementById('upload-doc-btn').addEventListener('click', async () => {
+        if (selectedDocs.length === 0) {
+          showToast('Pilih dokumen terlebih dahulu!', 'error');
+          return;
+        }
+
+        const btn = document.getElementById('upload-doc-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="32"/></svg><span>Mengunggah...</span>';
+
+        for (const file of selectedDocs) {
+          if (file.size > 25 * 1024 * 1024) {
+            showToast(`${file.name} terlalu besar`, 'error');
+            continue;
+          }
+
+          if (allItems.length >= 999) {
+            showToast('Batas maksimum tercapai!', 'error');
+            break;
+          }
+
+          try {
+            const dataUrl = await fileToBase64(file);
+
+            const item = {
+              content: dataUrl,
+              type: 'document',
+              device: currentDevice,
+              file_size: formatFileSize(file.size),
+              file_name: file.name,
+              createdAt: new Date().toISOString()
+            };
+
+            const result = await window.dataSdk.create(item);
+            if (!result.isOk) {
+              showToast('Gagal mengirim dokumen', 'error');
+            }
+          } catch (err) {
+            showToast('Error memproses dokumen', 'error');
+          }
+        }
+
+        selectedDocs = [];
+        await updateDocPreview();
+        document.getElementById('doc-input').value = '';
+        showToast('Semua dokumen berhasil dikirim!', 'success');
+
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg><span>Kirim Dokumen</span>';
+      });
+
+      // Enter key
+      document.getElementById('text-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          document.getElementById('send-btn').click();
+        }
+      });
+    }
+
     function detectDevice() {
       const ua = navigator.userAgent;
       if (/Android/i.test(ua)) return '📱 Android';
@@ -353,7 +667,6 @@
       return '🖥️ Desktop';
     }
 
-    // Generate session ID (4 chars)
     function generateSessionId() {
       const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
       let id = '';
@@ -363,24 +676,6 @@
       return id;
     }
 
-    // Generate QR Code
-    function generateQRCode(sessionId) {
-      const container = document.getElementById('qrcode-container');
-      container.innerHTML = '';
-      
-      const url = `${window.location.origin}${window.location.pathname}?join=${sessionId}`;
-      
-      new QRCode(container, {
-        text: url,
-        width: 200,
-        height: 200,
-        colorDark: '#ffffff',
-        colorLight: '#0f0f23',
-        correctLevel: QRCode.CorrectLevel.H
-      });
-    }
-
-    // Show toast
     function showToast(message, type = 'success') {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
@@ -411,10 +706,10 @@
       }, 2500);
     }
 
-    // Time ago
-    function timeAgo(timestamp) {
-      const now = Date.now();
-      const diff = now - timestamp;
+    function timeAgo(isoString) {
+      const now = new Date();
+      const date = new Date(isoString);
+      const diff = now - date;
       const seconds = Math.floor(diff / 1000);
 
       if (seconds < 60) return 'Baru saja';
@@ -423,7 +718,6 @@
       return `${Math.floor(seconds / 86400)} hari lalu`;
     }
 
-    // Format file size
     function formatFileSize(bytes) {
       if (bytes === 0) return '0 Bytes';
       const k = 1024;
@@ -432,27 +726,40 @@
       return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     }
 
-    // Render items
+    function getFileIcon(fileName) {
+      const ext = fileName.split('.').pop().toLowerCase();
+      const iconMap = {
+        'pdf': { bg: 'bg-red-500', text: 'PDF' },
+        'doc': { bg: 'bg-blue-500', text: 'DOC' },
+        'docx': { bg: 'bg-blue-500', text: 'DOCX' },
+        'xls': { bg: 'bg-green-500', text: 'XLS' },
+        'xlsx': { bg: 'bg-green-500', text: 'XLSX' },
+        'ppt': { bg: 'bg-orange-500', text: 'PPT' },
+        'pptx': { bg: 'bg-orange-500', text: 'PPTX' },
+        'zip': { bg: 'bg-yellow-600', text: 'ZIP' },
+        'rar': { bg: 'bg-yellow-600', text: 'RAR' },
+        'txt': { bg: 'bg-gray-600', text: 'TXT' }
+      };
+      return iconMap[ext] || { bg: 'bg-indigo-500', text: ext.toUpperCase().slice(0, 3) };
+    }
+
     function renderItems(data) {
       const list = document.getElementById('media-list');
       const emptyState = document.getElementById('empty-state');
       const count = document.getElementById('item-count');
 
-      itemCount = Object.keys(data || {}).length;
+      itemCount = data.length;
       count.textContent = `${itemCount} item`;
 
       if (itemCount === 0) {
-        emptyState.style.display = 'block';
-        list.innerHTML = '';
+        list.innerHTML = '<div id="empty-state" class="text-center py-12"><div class="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center"><svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div><p class="text-gray-500">Belum ada transfer</p><p class="text-gray-600 text-sm mt-1">Mulai dengan mengirim teks, foto, atau dokumen!</p></div>';
         return;
       }
 
-      emptyState.style.display = 'none';
-
-      const sorted = Object.entries(data).sort((a, b) => b[1].createdAt - a[1].createdAt);
+      const sorted = [...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       list.innerHTML = '';
-      sorted.forEach(([key, item]) => {
+      sorted.forEach((item) => {
         if (item.type === 'image') {
           const div = document.createElement('div');
           div.className = 'item-card glass-card rounded-2xl overflow-hidden slide-up';
@@ -470,7 +777,7 @@
                 <span class="device-badge bg-pink-500/20 text-pink-400">${item.device}</span>
                 <div class="flex items-center gap-2">
                   <span class="text-xs text-gray-500">${timeAgo(item.createdAt)}</span>
-                  <button class="delete-btn text-red-400 hover:text-red-300 transition-all p-1" data-key="${key}">
+                  <button class="delete-btn text-red-400 hover:text-red-300 transition-all p-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
@@ -482,8 +789,43 @@
           `;
           list.appendChild(div);
 
-          div.querySelector('.download-btn').addEventListener('click', () => downloadImage(item.content, item.file_name));
-          div.querySelector('.delete-btn').addEventListener('click', () => deleteItem(key));
+          div.querySelector('.download-btn').addEventListener('click', () => downloadItem(item.content, item.file_name || 'fastshare.jpg'));
+          div.querySelector('.delete-btn').addEventListener('click', () => deleteItem(item));
+        } else if (item.type === 'document') {
+          const fileIcon = getFileIcon(item.file_name);
+          const div = document.createElement('div');
+          div.className = 'item-card glass-card rounded-2xl p-4 slide-up flex items-center gap-4 group';
+          div.innerHTML = `
+            <div class="file-icon ${fileIcon.bg} flex-shrink-0">
+              ${fileIcon.text}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-gray-300 text-sm font-medium truncate">${escapeHtml(item.file_name)}</p>
+              <div class="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                <span>${item.file_size}</span>
+                <span>•</span>
+                <span>${timeAgo(item.createdAt)}</span>
+                <span>•</span>
+                <span class="device-badge bg-orange-500/20 text-orange-400">${item.device}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button class="download-btn p-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/40 rounded-lg transition-all" title="Download">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+              </button>
+              <button class="delete-btn p-2 text-red-400 hover:text-red-300 transition-all opacity-0 group-hover:opacity-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          `;
+          list.appendChild(div);
+
+          div.querySelector('.download-btn').addEventListener('click', () => downloadItem(item.content, item.file_name));
+          div.querySelector('.delete-btn').addEventListener('click', () => deleteItem(item));
         } else {
           const div = document.createElement('div');
           div.className = 'item-card bg-white/5 rounded-2xl p-4 cursor-pointer group slide-up';
@@ -492,7 +834,7 @@
               <span class="device-badge bg-indigo-500/20 text-indigo-400">${item.device}</span>
               <div class="flex items-center gap-2">
                 <span class="text-xs text-gray-500">${timeAgo(item.createdAt)}</span>
-                <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-all p-1" data-key="${key}">
+                <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-all p-1">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                   </svg>
@@ -520,42 +862,8 @@
           });
 
           list.appendChild(div);
-          div.querySelector('.delete-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteItem(key);
-          });
+          div.querySelector('.delete-btn').addEventListener('click', () => deleteItem(item));
         }
-      });
-    }
-
-    function downloadImage(dataUrl, filename) {
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = (filename || 'fastshare') + '.jpg';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast('Download dimulai', 'success');
-    }
-
-    function deleteItem(key) {
-      if (sessionId) {
-        db.ref(`sessions/${sessionId}/items/${key}`).remove();
-      }
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
       });
     }
 
@@ -602,234 +910,87 @@
       });
     }
 
-    // Initialize app
-    function initApp() {
-      currentDevice = detectDevice();
-      document.getElementById('device-indicator').textContent = currentDevice;
+    async function updateDocPreview() {
+      const preview = document.getElementById('doc-preview');
+      const container = document.getElementById('doc-preview-container');
+      const uploadBtn = document.getElementById('upload-doc-btn');
 
-      // Get or create session ID
-      let saved = localStorage.getItem('fastshare_session');
-      if (!saved) {
-        saved = generateSessionId();
-        localStorage.setItem('fastshare_session', saved);
-      }
-      sessionId = saved;
-      document.getElementById('session-display').textContent = sessionId.toUpperCase();
-
-      if (window.elementSdk) {
-        window.elementSdk.init({
-          defaultConfig,
-          onConfigChange: async (config) => {
-            document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
-            document.getElementById('text-input').placeholder = config.placeholder_text || defaultConfig.placeholder_text;
-          },
-          mapToCapabilities: () => ({
-            recolorables: [],
-            borderables: [],
-            fontEditable: undefined,
-            fontSizeable: undefined
-          }),
-          mapToEditPanelValues: (config) => new Map([
-            ['app_title', config.app_title || defaultConfig.app_title],
-            ['placeholder_text', config.placeholder_text || defaultConfig.placeholder_text]
-          ])
-        });
+      if (selectedDocs.length === 0) {
+        preview.classList.add('hidden');
+        uploadBtn.disabled = true;
+        return;
       }
 
-      // Listen to Firebase
-      const sessionsRef = db.ref(`sessions/${sessionId}/items`);
-      sessionsRef.on('value', (snapshot) => {
-        renderItems(snapshot.val() || {});
+      preview.classList.remove('hidden');
+      uploadBtn.disabled = false;
+
+      container.innerHTML = '';
+
+      selectedDocs.forEach((file, idx) => {
+        const icon = getFileIcon(file.name);
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-3 bg-white/5 rounded-lg p-3';
+        div.innerHTML = `
+          <div class="file-icon ${icon.bg} flex-shrink-0">
+            ${icon.text}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-gray-300 text-sm truncate">${escapeHtml(file.name)}</p>
+            <p class="text-gray-500 text-xs">${formatFileSize(file.size)}</p>
+          </div>
+          <button class="remove-doc text-red-400 hover:text-red-300 p-1" data-index="${idx}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        `;
+        container.appendChild(div);
       });
 
-      // QR Modal
-      document.getElementById('qrcode-btn').addEventListener('click', () => {
-        generateQRCode(sessionId);
-        document.getElementById('qr-session-display').textContent = sessionId.toUpperCase();
-        document.getElementById('qrcode-modal').classList.remove('hidden');
-      });
-
-      document.getElementById('close-qrcode-modal').addEventListener('click', () => {
-        document.getElementById('qrcode-modal').classList.add('hidden');
-      });
-
-      // Session Modal
-      document.getElementById('session-btn').addEventListener('click', () => {
-        document.getElementById('session-modal').classList.remove('hidden');
-      });
-
-      document.getElementById('close-session-modal').addEventListener('click', () => {
-        document.getElementById('session-modal').classList.add('hidden');
-      });
-
-      document.getElementById('copy-session-btn').addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(sessionId);
-          showToast('ID disalin!', 'success');
-        } catch {
-          showToast('Gagal menyalin', 'error');
-        }
-      });
-
-      // Join Modal
-      document.getElementById('join-btn').addEventListener('click', () => {
-        document.getElementById('join-modal').classList.remove('hidden');
-      });
-
-      document.getElementById('close-join-modal').addEventListener('click', () => {
-        document.getElementById('join-modal').classList.add('hidden');
-      });
-
-      document.getElementById('join-session-btn').addEventListener('click', () => {
-        const input = document.getElementById('join-input').value.trim().toLowerCase();
-        if (input.length !== 4) {
-          showToast('ID harus 4 karakter', 'error');
-          return;
-        }
-        localStorage.setItem('fastshare_session', input);
-        sessionId = input;
-        document.getElementById('session-display').textContent = input.toUpperCase();
-        showToast(`Bergabung ke sesi ${input.toUpperCase()}`, 'success');
-        document.getElementById('join-modal').classList.add('hidden');
-        document.getElementById('join-input').value = '';
-        location.reload();
-      });
-
-      // Check URL parameter for QR scan
-      const urlParams = new URLSearchParams(window.location.search);
-      const joinParam = urlParams.get('join');
-      if (joinParam && joinParam.length === 4) {
-        localStorage.setItem('fastshare_session', joinParam.toLowerCase());
-        sessionId = joinParam.toLowerCase();
-        showToast(`✅ Bergabung ke sesi ${joinParam.toUpperCase()}!`, 'success');
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-
-      // Image upload
-      const dropZone = document.getElementById('drop-zone');
-      const imageInput = document.getElementById('image-input');
-
-      dropZone.addEventListener('click', () => imageInput.click());
-
-      imageInput.addEventListener('change', async (e) => {
-        selectedImages.push(...Array.from(e.target.files || []));
-        await updateImagePreview();
-      });
-
-      dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-      });
-
-      dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('dragover');
-      });
-
-      dropZone.addEventListener('drop', async (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        selectedImages.push(...Array.from(e.dataTransfer.files));
-        await updateImagePreview();
-      });
-
-      // Send text
-      document.getElementById('send-btn').addEventListener('click', async () => {
-        const input = document.getElementById('text-input');
-        const content = input.value.trim();
-
-        if (!content) {
-          showToast('Ketik teks terlebih dahulu!', 'error');
-          return;
-        }
-
-        if (itemCount >= 999) {
-          showToast('Batas maksimum tercapai!', 'error');
-          return;
-        }
-
-        const btn = document.getElementById('send-btn');
-        btn.disabled = true;
-
-        const item = {
-          id: Date.now().toString(),
-          content: content,
-          type: 'text',
-          device: currentDevice,
-          createdAt: Date.now()
-        };
-
-        await db.ref(`sessions/${sessionId}/items`).push(item);
-        input.value = '';
-        btn.disabled = false;
-        showToast('Teks berhasil dikirim!', 'success');
-      });
-
-      // Paste text
-      document.getElementById('paste-btn').addEventListener('click', async () => {
-        try {
-          const text = await navigator.clipboard.readText();
-          document.getElementById('text-input').value = text;
-          showToast('Teks ditempel!', 'success');
-        } catch {
-          showToast('Tidak bisa mengakses clipboard', 'error');
-        }
-      });
-
-      // Upload images
-      document.getElementById('upload-btn').addEventListener('click', async () => {
-        if (selectedImages.length === 0) {
-          showToast('Pilih foto terlebih dahulu!', 'error');
-          return;
-        }
-
-        const btn = document.getElementById('upload-btn');
-        btn.disabled = true;
-        btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="32"/></svg><span>Mengunggah...</span>';
-
-        for (const file of selectedImages) {
-          if (file.size > 5 * 1024 * 1024) {
-            showToast(`${file.name} terlalu besar`, 'error');
-            continue;
-          }
-
-          try {
-            const dataUrl = await fileToBase64(file);
-
-            const item = {
-              id: Date.now().toString(),
-              content: dataUrl,
-              type: 'image',
-              device: currentDevice,
-              file_size: formatFileSize(file.size),
-              file_name: file.name,
-              createdAt: Date.now()
-            };
-
-            await db.ref(`sessions/${sessionId}/items`).push(item);
-          } catch (err) {
-            showToast('Error memproses foto', 'error');
-          }
-        }
-
-        selectedImages = [];
-        await updateImagePreview();
-        document.getElementById('image-input').value = '';
-        showToast('Semua foto berhasil dikirim!', 'success');
-
-        btn.disabled = false;
-        btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg><span>Kirim Foto</span>';
-      });
-
-      // Enter key for text
-      document.getElementById('text-input').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+      container.querySelectorAll('.remove-doc').forEach(btn => {
+        btn.addEventListener('click', (e) => {
           e.preventDefault();
-          document.getElementById('send-btn').click();
-        }
+          selectedDocs.splice(parseInt(btn.dataset.index), 1);
+          updateDocPreview();
+        });
+      });
+    }
+
+    function downloadItem(dataUrl, fileName) {
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Download dimulai', 'success');
+    }
+
+    async function deleteItem(item) {
+      const result = await window.dataSdk.delete(item);
+      if (!result.isOk) {
+        showToast('Gagal menghapus', 'error');
+      } else {
+        showToast('Item dihapus', 'success');
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
     }
 
     initApp();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d2b1b4a26b4ff81',t:'MTc3MTg5NTY3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d2b5089f4ba9855',t:'MTc3MTg5Nzg1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
