@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <script src="/_sdk/data_sdk.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Space Grotesk', sans-serif; }
@@ -180,23 +180,13 @@
     .media-item:hover .download-btn {
       opacity: 1;
     }
-
-    #qr-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    #qr-container canvas {
-      border-radius: 8px;
-    }
   </style>
   <style>body { box-sizing: border-box; }</style>
  </head>
  <body class="h-full gradient-bg text-white overflow-auto">
   <div id="app" class="min-h-full w-full p-4 md:p-8"><!-- Header -->
    <header class="max-w-4xl mx-auto mb-8 slide-up">
-    <div class="flex items-center justify-between flex-wrap gap-4">
+    <div class="flex items-center justify-between flex-wrap gap-4 mb-4">
      <div class="flex items-center gap-3">
       <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center float-animation">
        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -210,29 +200,52 @@
      <div class="flex items-center gap-2">
       <div class="pulse-dot w-2 h-2 rounded-full bg-emerald-400"></div><span id="device-indicator" class="text-sm text-gray-400">Mendeteksi...</span>
      </div>
-    </div><!-- Session Info -->
-    <div class="mt-6 glass-card rounded-2xl p-4 flex items-center justify-between">
-     <div>
-      <p class="text-xs text-gray-500 mb-1">Session ID</p>
-      <p id="session-id" class="mono text-sm font-semibold text-indigo-400">Generating...</p>
-     </div><button id="toggle-qr-btn" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-      </svg><span>Tampilkan QR</span> </button>
-    </div><!-- QR Code Modal -->
-    <div id="qr-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-     <div class="glass-card rounded-3xl p-8 max-w-md w-full">
-      <div class="flex items-center justify-between mb-6">
-       <h2 class="text-xl font-bold">Scan untuk Terhubung</h2><button id="close-qr-btn" class="text-gray-400 hover:text-white">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg></button>
+    </div><!-- Session Info Card -->
+    <div class="glass-card rounded-2xl p-4 neon-border">
+     <div class="flex items-center justify-between flex-wrap gap-3">
+      <div class="flex-1">
+       <p class="text-gray-500 text-xs mb-2">Session ID Anda</p>
+       <div class="flex items-center gap-2 flex-wrap"><code id="session-id" class="mono text-lg font-bold text-indigo-300 bg-black/30 px-4 py-2 rounded-lg select-all">Generating...</code> <button id="copy-session-btn" class="p-2 hover:bg-white/10 rounded-lg transition-all" title="Salin Session ID">
+         <svg class="w-4 h-4 text-gray-400 hover:text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+         </svg></button>
+       </div>
       </div>
-      <div id="qr-container" class="bg-white p-4 rounded-xl mx-auto mb-4"></div>
-      <p class="text-center text-gray-400 text-sm mb-3">atau copy Session ID:</p>
-      <div class="flex gap-2"><input id="session-input" type="text" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm mono" readonly> <button id="copy-session-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-all">Copy</button>
+      <div class="flex items-center gap-2 flex-wrap"><button id="show-qr-btn" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2 btn-glow">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg> QR Code </button> <button id="join-session-btn" class="bg-white/10 hover:bg-white/20 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm"> Join </button>
       </div>
      </div>
     </div>
-   </header><!-- Main Content -->
+   </header><!-- QR Code Modal -->
+   <div id="qr-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+    <div class="glass-card rounded-3xl p-8 max-w-sm w-full neon-border slide-up">
+     <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold">Scan QR Code</h2><button id="close-qr-btn" class="text-gray-400 hover:text-white transition-all">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg></button>
+     </div>
+     <div class="bg-white p-6 rounded-2xl mb-6">
+      <canvas id="qr-code" class="w-full h-auto"></canvas>
+     </div>
+     <p class="text-gray-400 text-sm text-center mb-4">Scan QR code ini dari perangkat lain untuk terhubung</p>
+     <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+      <p class="text-amber-400 text-xs">💡 Atau bagikan ID: <code id="qr-session-id" class="mono font-bold text-amber-300">-</code></p>
+     </div>
+    </div>
+   </div><!-- Join Session Modal -->
+   <div id="join-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+    <div class="glass-card rounded-3xl p-8 max-w-sm w-full neon-border slide-up">
+     <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold">Masuk ke Session</h2><button id="close-join-btn" class="text-gray-400 hover:text-white transition-all">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg></button>
+     </div>
+     <div class="space-y-4">
+      <div><label class="text-sm text-gray-400 mb-2 block">Masukkan Session ID</label> <input id="join-session-input" type="text" placeholder="Contoh: abc123def456" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all mono text-center uppercase">
+      </div><button id="confirm-join-btn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3 px-6 rounded-xl transition-all btn-glow"> Terhubung </button>
+     </div>
+    </div>
+   </div><!-- Main Content -->
    <main class="max-w-4xl mx-auto space-y-6"><!-- Input Section -->
     <section class="glass-card rounded-3xl p-6 neon-border slide-up" style="animation-delay: 0.1s">
      <div class="flex items-center gap-2 mb-4">
@@ -296,10 +309,8 @@
        </svg>
       </div>
       <div>
-       <h3 class="font-semibold text-amber-400 mb-1">Cara Pakai dengan QR Code</h3>
-       <p class="text-gray-400 text-sm leading-relaxed mb-2">📱 <strong>HP:</strong> Buka halaman ini, klik "Tampilkan QR" → scan QR code dari PC menggunakan kamera HP</p>
-       <p class="text-gray-400 text-sm leading-relaxed mb-2">💻 <strong>PC:</strong> Buka halaman ini, klik "Tampilkan QR" → tampilkan QR code untuk di-scan HP</p>
-       <p class="text-gray-400 text-sm leading-relaxed">✨ Setelah terhubung dengan Session ID yang sama, teks dan foto akan langsung sinkron antar perangkat!</p>
+       <h3 class="font-semibold text-amber-400 mb-1">Tips Penggunaan</h3>
+       <p class="text-gray-400 text-sm leading-relaxed">Buka halaman ini di HP dan PC secara bersamaan dengan Session ID yang sama. Gunakan tombol <strong>QR Code</strong> untuk scan atau <strong>Join</strong> untuk isi ID manual. Teks dan foto akan langsung sinkron di semua perangkat!</p>
       </div>
      </div>
     </section>
@@ -317,7 +328,11 @@
     let currentDevice = 'Unknown';
     let selectedImages = [];
     let sessionId = '';
-    let qrGenerated = false;
+    
+    // Generate Session ID
+    function generateSessionId() {
+      return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    }
     
     // Detect device type
     function detectDevice() {
@@ -328,30 +343,6 @@
       if (/Mac/i.test(ua)) return '💻 macOS';
       if (/Linux/i.test(ua)) return '💻 Linux';
       return '🖥️ Desktop';
-    }
-    
-    // Generate unique session ID
-    function generateSessionId() {
-      return Math.random().toString(36).substr(2, 9).toUpperCase();
-    }
-    
-    // Generate QR code
-    function generateQRCode(text) {
-      const container = document.getElementById('qr-container');
-      container.innerHTML = '';
-      
-      if (qrGenerated) return;
-      
-      new QRCode(container, {
-        text: text,
-        width: 250,
-        height: 250,
-        colorDark: '#0f0f23',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H
-      });
-      
-      qrGenerated = true;
     }
     
     // Show toast notification
@@ -417,7 +408,7 @@
       const emptyState = document.getElementById('empty-state');
       const itemCount = document.getElementById('item-count');
       
-      // Filter by current session ID
+      // Filter by current session
       const filteredData = data.filter(item => item.session_id === sessionId);
       
       itemCount.textContent = `${filteredData.length} item`;
@@ -600,6 +591,19 @@
       });
     }
     
+    // Generate QR Code
+    function generateQRCode() {
+      const qrCanvas = document.getElementById('qr-code');
+      new QRious({
+        element: qrCanvas,
+        value: sessionId,
+        size: 300,
+        level: 'H',
+        mime: 'image/png'
+      });
+      document.getElementById('qr-session-id').textContent = sessionId;
+    }
+    
     // Update image preview
     async function updateImagePreview() {
       const preview = document.getElementById('image-preview');
@@ -656,10 +660,10 @@
     
     // Initialize app
     async function initApp() {
-      // Generate session ID
+      // Generate and set session ID
       sessionId = generateSessionId();
       document.getElementById('session-id').textContent = sessionId;
-      document.getElementById('session-input').value = sessionId;
+      generateQRCode();
       
       currentDevice = detectDevice();
       document.getElementById('device-indicator').textContent = currentDevice;
@@ -691,28 +695,44 @@
         }
       }
       
-      // QR Code handlers
-      const toggleQrBtn = document.getElementById('toggle-qr-btn');
-      const qrModal = document.getElementById('qr-modal');
-      const closeQrBtn = document.getElementById('close-qr-btn');
-      const copySessionBtn = document.getElementById('copy-session-btn');
-      
-      toggleQrBtn.addEventListener('click', () => {
-        qrModal.classList.remove('hidden');
-        generateQRCode(window.location.href + '#' + sessionId);
+      // QR Modal handlers
+      document.getElementById('show-qr-btn').addEventListener('click', () => {
+        document.getElementById('qr-modal').classList.remove('hidden');
       });
       
-      closeQrBtn.addEventListener('click', () => {
-        qrModal.classList.add('hidden');
+      document.getElementById('close-qr-btn').addEventListener('click', () => {
+        document.getElementById('qr-modal').classList.add('hidden');
       });
       
-      qrModal.addEventListener('click', (e) => {
-        if (e.target === qrModal) {
-          qrModal.classList.add('hidden');
+      // Join Modal handlers
+      document.getElementById('join-session-btn').addEventListener('click', () => {
+        document.getElementById('join-modal').classList.remove('hidden');
+      });
+      
+      document.getElementById('close-join-btn').addEventListener('click', () => {
+        document.getElementById('join-modal').classList.add('hidden');
+      });
+      
+      document.getElementById('confirm-join-btn').addEventListener('click', async () => {
+        const inputId = document.getElementById('join-session-input').value.trim().toUpperCase();
+        if (!inputId) {
+          showToast('Masukkan Session ID terlebih dahulu!', 'error');
+          return;
         }
+        
+        sessionId = inputId;
+        document.getElementById('session-id').textContent = sessionId;
+        generateQRCode();
+        
+        document.getElementById('join-modal').classList.add('hidden');
+        document.getElementById('join-session-input').value = '';
+        
+        showToast(`Terhubung ke session: ${sessionId}`, 'success');
+        renderItems(currentData);
       });
       
-      copySessionBtn.addEventListener('click', async () => {
+      // Copy session ID
+      document.getElementById('copy-session-btn').addEventListener('click', async () => {
         try {
           await navigator.clipboard.writeText(sessionId);
           showToast('Session ID disalin!', 'success');
@@ -859,9 +879,22 @@
           document.getElementById('send-btn').click();
         }
       });
+      
+      // Close modals on click outside
+      document.getElementById('qr-modal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('qr-modal')) {
+          document.getElementById('qr-modal').classList.add('hidden');
+        }
+      });
+      
+      document.getElementById('join-modal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('join-modal')) {
+          document.getElementById('join-modal').classList.add('hidden');
+        }
+      });
     }
     
     initApp();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d2a9fba2481fd26',t:'MTc3MTg5MDYxMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d2ab3ab93013e37',t:'MTc3MTg5MTQyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
